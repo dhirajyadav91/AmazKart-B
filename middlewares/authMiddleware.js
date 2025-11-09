@@ -1,38 +1,30 @@
 import JWT from "jsonwebtoken";
 import userModel from "../models/userModel.js";
 
-//Protected Routes token base
 export const requireSignIn = async (req, res, next) => {
   try {
-    const decode = JWT.verify(
-      req.headers.authorization,
-      process.env.JWT_SECRET
-    );
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      return res.status(401).send({ message: "No token provided" });
+    }
+    const decode = JWT.verify(token, process.env.JWT_SECRET);
     req.user = decode;
     next();
   } catch (error) {
     console.log(error);
+    return res.status(401).send({ message: "Invalid token" });
   }
 };
 
-//admin acceess
 export const isAdmin = async (req, res, next) => {
   try {
     const user = await userModel.findById(req.user._id);
     if (user.role !== 1) {
-      return res.status(401).send({
-        success: false,
-        message: "UnAuthorized Access",
-      });
-    } else {
-      next();
+      return res.status(403).send({ message: "Admin access denied" });
     }
+    next();
   } catch (error) {
     console.log(error);
-    res.status(401).send({
-      success: false,
-      error,
-      message: "Error in admin middelware",
-    });
+    return res.status(401).send({ message: "Auth error" });
   }
 };

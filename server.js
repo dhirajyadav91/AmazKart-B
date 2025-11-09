@@ -8,52 +8,61 @@ import categoryRoutes from "./routes/categoryRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import cors from "cors";
 
-//configure env
+// configure env
 dotenv.config();
 
-//databse config
+// database config
 connectDB();
 
-//rest object
+// rest object
 const app = express();
 
-//middelwares
-app.use(cors());
+// middlewares
 app.use(express.json());
 app.use(morgan("dev"));
 
-// CORS configuration
-app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  credentials: true 
-}));
+// ✅ Allowed origins list
+const allowedOrigins = [
+  process.env.FRONTEND_BASE_URL || "http://localhost:3000",
+  "http://localhost:5173", // dev mode
+];
 
+// ✅ Proper CORS setup using allowedOrigins
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        console.error("❌ Blocked by CORS:", origin);
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
 
-//testing backend
+// test route
 app.get("/api/test", (req, res) => {
-  res.json({ message: "CORS setup working " });
+  res.json({ message: "CORS setup working ✅" });
 });
 
-
-
-//routes
+// routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/category", categoryRoutes);
 app.use("/api/v1/product", productRoutes);
 
-//rest api
+// base route
 app.get("/", (req, res) => {
-  res.send("<h1>Server is running</h1>");
+  res.send("<h1>Server is running 🚀</h1>");
 });
 
-//PORT
+// port
 const PORT = process.env.PORT || 8080;
 
-//run listen
+// run listen
 app.listen(PORT, () => {
   console.log(
-    `Server Running on ${process.env.DEV_MODE} mode on port ${PORT}`.bgCyan
-      .white
+    `✅ Server Running on ${process.env.DEV_MODE} mode on port ${PORT}`.bgCyan.white
   );
 });

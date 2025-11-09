@@ -1,3 +1,4 @@
+// models/productModel.js
 import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema(
@@ -6,7 +7,7 @@ const productSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    slug: {
+    slug: {  
       type: String,
       required: true,
     },
@@ -31,6 +32,9 @@ const productSchema = new mongoose.Schema(
       data: Buffer,
       contentType: String,
     },
+    photoUrl: {  // ✅ ADD THIS FIELD
+      type: String,
+    },
     shipping: {
       type: Boolean,
     },
@@ -38,4 +42,4 @@ const productSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.model("Products", productSchema);
+export default mongoose.model("Product", productSchema);
