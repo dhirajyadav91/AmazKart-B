@@ -21,26 +21,13 @@ const app = express();
 app.use(express.json());
 app.use(morgan("dev"));
 
-// ✅ Allowed origins list
-const allowedOrigins = [
-  process.env.FRONTEND_BASE_URL || "http://localhost:3000",
-  "http://localhost:5173", // dev mode
-];
 
-// ✅ Proper CORS setup using allowedOrigins
-app.use(
-  cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.error("❌ Blocked by CORS:", origin);
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
-    credentials: true,
-  })
-);
+app.use(cors({
+  origin: process.env.FRONTEND_BASE_URL ||"http://localhost:3000",
+  methods: "GET,POST,PUT,PATCH,DELETE",
+  allowedHeaders: "Content-Type, Authorization"
+}));
+
 
 // test route
 app.get("/api/test", (req, res) => {
@@ -58,11 +45,12 @@ app.get("/", (req, res) => {
 });
 
 // port
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 8000;
 
-// run listen
+// run server
 app.listen(PORT, () => {
   console.log(
-    `✅ Server Running on ${process.env.DEV_MODE} mode on port ${PORT}`.bgCyan.white
+    `✅ Server Running in ${process.env.DEV_MODE} mode on port ${PORT}`.bgCyan
+      .white
   );
 });
