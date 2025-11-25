@@ -7,6 +7,7 @@ import authRoutes from "./routes/authRoute.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import cors from "cors";
+import serverless from "serverless-http"; // ✅ Added
 
 // configure env
 dotenv.config();
@@ -21,13 +22,13 @@ const app = express();
 app.use(express.json());
 app.use(morgan("dev"));
 
-
-app.use(cors({
-  origin: process.env.FRONTEND_BASE_URL ||"http://localhost:3000",
-  methods: "GET,POST,PUT,PATCH,DELETE",
-  allowedHeaders: "Content-Type, Authorization"
-}));
-
+app.use(
+  cors({
+    origin: process.env.FRONTEND_BASE_URL || "http://localhost:3000",
+    methods: "GET,POST,PUT,PATCH,DELETE",
+    allowedHeaders: "Content-Type, Authorization",
+  })
+);
 
 // test route
 app.get("/api/test", (req, res) => {
@@ -44,13 +45,13 @@ app.get("/", (req, res) => {
   res.send("<h1>Server is running 🚀</h1>");
 });
 
-// port
-const PORT = process.env.PORT || 8000;
+// ❌ REMOVE app.listen (Vercel does NOT allow running servers)
+// app.listen(PORT, () => {
+//   console.log(
+//     `✅ Server Running in ${process.env.DEV_MODE} mode on port ${PORT}`.bgCyan
+//       .white
+//   );
+// });
 
-// run server
-app.listen(PORT, () => {
-  console.log(
-    `✅ Server Running in ${process.env.DEV_MODE} mode on port ${PORT}`.bgCyan
-      .white
-  );
-});
+// ✅ EXPORT SERVERLESS HANDLER FOR VERCEL
+export const handler = serverless(app);
