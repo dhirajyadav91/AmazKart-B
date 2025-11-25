@@ -7,7 +7,7 @@ import authRoutes from "./routes/authRoute.js";
 import categoryRoutes from "./routes/categoryRoutes.js";
 import productRoutes from "./routes/productRoutes.js";
 import cors from "cors";
-import serverless from "serverless-http"; // ✅ Added
+import serverless from "serverless-http"; // Serverless adapter
 
 // configure env
 dotenv.config();
@@ -18,15 +18,41 @@ connectDB();
 // rest object
 const app = express();
 
+// Global CORS fix for Vercel
+app.use((req, res, next) => {
+  res.setHeader(
+    "Access-Control-Allow-Origin",
+    process.env.FRONTEND_BASE_URL || "http://localhost:3000"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+  );
+  res.setHeader(
+    "Access-Control-Allow-Headers",
+    "Content-Type, Authorization"
+  );
+  res.setHeader("Access-Control-Allow-Credentials", "true");
+
+  // Handle preflight
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  next();
+});
+
 // middlewares
 app.use(express.json());
 app.use(morgan("dev"));
 
+// Normal CORS (still needed)
 app.use(
   cors({
     origin: process.env.FRONTEND_BASE_URL || "http://localhost:3000",
-    methods: "GET,POST,PUT,PATCH,DELETE",
-    allowedHeaders: "Content-Type, Authorization",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
@@ -45,13 +71,7 @@ app.get("/", (req, res) => {
   res.send("<h1>Server is running 🚀</h1>");
 });
 
-// ❌ REMOVE app.listen (Vercel does NOT allow running servers)
-// app.listen(PORT, () => {
-//   console.log(
-//     `✅ Server Running in ${process.env.DEV_MODE} mode on port ${PORT}`.bgCyan
-//       .white
-//   );
-// });
+// ❌ NO app.listen for Vercel
 
 // ✅ EXPORT SERVERLESS HANDLER FOR VERCEL
 export const handler = serverless(app);
