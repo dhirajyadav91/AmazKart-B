@@ -56,6 +56,14 @@ app.use(
   })
 );
 
+
+app.options("*", (req, res) => {
+  res.setHeader("Access-Control-Allow-Origin", "https://amaz-kart-f.vercel.app");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, PATCH");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.status(200).end();
+});
+
 // test route
 app.get("/api/test", (req, res) => {
   res.json({ message: "CORS setup working ✅" });
