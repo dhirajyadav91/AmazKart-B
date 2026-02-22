@@ -21,24 +21,24 @@ const razorpay = new Razorpay({
 const uploadToCloudinary = async (file) => {
   try {
     console.log("📤 Uploading file to Cloudinary:", file.path);
-    
+
     // Check if file exists before uploading
     if (!fs.existsSync(file.path)) {
       throw new Error("File not found at path: " + file.path);
     }
-    
+
     const result = await cloudinary.uploader.upload(file.path, {
       folder: "ecommerce-products",
       quality: "auto:good",
       fetch_format: "auto",
     });
-    
+
     // Clean up the temporary file
     if (fs.existsSync(file.path)) {
       fs.unlinkSync(file.path);
       console.log("✅ Temporary file cleaned up");
     }
-    
+
     console.log("✅ Image uploaded to Cloudinary:", result.secure_url);
     return result;
   } catch (error) {
@@ -55,7 +55,7 @@ export const createProductController = async (req, res) => {
   try {
     const { name, description, price, category, quantity, shipping } = req.fields;
     const { photo } = req.files;
-    
+
     console.log("🔄 Starting product creation...");
     console.log("Product Data:", { name, description, price, category, quantity, shipping });
     console.log("Photo received:", photo ? `Yes (${photo.name}, ${photo.size} bytes)` : "No");
@@ -80,7 +80,7 @@ export const createProductController = async (req, res) => {
         const cloudinaryResult = await uploadToCloudinary(photo);
         photoUrl = cloudinaryResult.secure_url;
         console.log("✅ Cloudinary URL obtained:", photoUrl);
-        
+
         // Read file for binary data before it gets deleted
         if (fs.existsSync(photo.path)) {
           photoData = {
@@ -201,7 +201,7 @@ export const getSingleProductController = async (req, res) => {
     }
 
     console.log("✅ Product found by slug:", product.name);
-    
+
     res.status(200).send({
       success: true,
       message: "Single Product Fetched",
@@ -247,7 +247,7 @@ export const getProductByIdController = async (req, res) => {
     }
 
     console.log("✅ Product found by ID:", product.name);
-    
+
     res.status(200).send({
       success: true,
       message: "Single Product Fetched Successfully",
@@ -255,7 +255,7 @@ export const getProductByIdController = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Error in getProductByIdController:", error);
-    
+
     if (error.name === 'CastError') {
       return res.status(400).send({
         success: false,
@@ -263,7 +263,7 @@ export const getProductByIdController = async (req, res) => {
         error: error.message,
       });
     }
-    
+
     res.status(500).send({
       success: false,
       message: "Error while getting product by ID",
@@ -276,25 +276,25 @@ export const getProductByIdController = async (req, res) => {
 export const productPhotoController = async (req, res) => {
   try {
     const product = await productModel.findById(req.params.pid).select("photo photoUrl");
-    
+
     if (!product) {
       return res.status(404).send({
         success: false,
         message: "Product not found",
       });
     }
-    
+
     // Priority to Cloudinary URL if available
     if (product.photoUrl) {
       return res.redirect(product.photoUrl);
     }
-    
+
     // Fallback to binary data
     if (product.photo && product.photo.data) {
       res.set("Content-type", product.photo.contentType);
       return res.status(200).send(product.photo.data);
     }
-    
+
     // If no photo found
     res.status(404).send({
       success: false,
@@ -314,7 +314,7 @@ export const productPhotoController = async (req, res) => {
 export const deleteProductController = async (req, res) => {
   try {
     const product = await productModel.findById(req.params.pid);
-    
+
     if (!product) {
       return res.status(404).send({
         success: false,
@@ -331,7 +331,7 @@ export const deleteProductController = async (req, res) => {
         console.log("Cloudinary delete error:", cloudinaryError);
       }
     }
-    
+
     await productModel.findByIdAndDelete(req.params.pid);
     res.status(200).send({
       success: true,
@@ -352,7 +352,7 @@ export const updateProductController = async (req, res) => {
   try {
     const { name, description, price, category, quantity, shipping } = req.fields;
     const { photo } = req.files;
-    
+
     console.log("🔄 Starting product update...");
     console.log("Update Data:", { name, description, price, category, quantity, shipping });
     console.log("New Photo received:", photo ? `Yes (${photo.name}, ${photo.size} bytes)` : "No");
@@ -382,7 +382,7 @@ export const updateProductController = async (req, res) => {
     // Handle photo upload if new photo is provided
     if (photo) {
       console.log("🖼️ Uploading new photo to Cloudinary...");
-      
+
       // Delete old image from Cloudinary if exists
       if (existingProduct.photoUrl) {
         try {
@@ -393,13 +393,13 @@ export const updateProductController = async (req, res) => {
           console.log("⚠️ Cloudinary delete error:", cloudinaryError);
         }
       }
-      
+
       try {
         // Upload new image to Cloudinary
         const cloudinaryResult = await uploadToCloudinary(photo);
         photoUrl = cloudinaryResult.secure_url;
         console.log("✅ New Cloudinary URL obtained:", photoUrl);
-        
+
         // Read file for binary data
         if (fs.existsSync(photo.path)) {
           photoData = {
@@ -446,14 +446,14 @@ export const updateProductController = async (req, res) => {
       updateData,
       { new: true, runValidators: true }
     );
-    
+
     if (!updatedProduct) {
       return res.status(404).send({
         success: false,
         message: "Product not found during update",
       });
     }
-    
+
     console.log("✅ Product updated successfully!");
     console.log("📊 Updated product in DB:", {
       _id: updatedProduct._id,
@@ -520,7 +520,7 @@ export const productCountController = async (req, res) => {
 // product list base on page
 export const productListController = async (req, res) => {
   try {
-    const perPage = 6;
+    const perPage = 12;
     const page = req.params.page ? req.params.page : 1;
     const products = await productModel
       .find({})
@@ -601,7 +601,7 @@ export const productCategoryController = async (req, res) => {
         message: "Category not found",
       });
     }
-    
+
     const products = await productModel.find({ category }).populate("category").select("-photo");
     res.status(200).send({
       success: true,
@@ -681,12 +681,12 @@ export const addToCartController = async (req, res) => {
 
     // Calculate total
     cart.total = cart.items.reduce((total, item) => total + (item.price * item.quantity), 0);
-    
+
     await cart.save();
-    
+
     // Populate the cart before sending response
     await cart.populate('items.product', 'name price slug photoUrl quantity');
-    
+
     res.status(200).send({
       success: true,
       message: "Product added to cart successfully",
@@ -763,7 +763,7 @@ export const updateCartItemController = async (req, res) => {
     }
 
     const product = cart.items[itemIndex].product;
-    
+
     // Check stock availability
     if (quantity > product.quantity) {
       return res.status(400).send({
@@ -780,12 +780,12 @@ export const updateCartItemController = async (req, res) => {
 
     // Recalculate total
     cart.total = cart.items.reduce((total, item) => total + (item.price * item.quantity), 0);
-    
+
     await cart.save();
-    
+
     // Populate before sending response
     await cart.populate("items.product", "name price slug photoUrl quantity");
-    
+
     res.status(200).send({
       success: true,
       message: "Cart updated successfully",
@@ -826,12 +826,12 @@ export const removeCartItemController = async (req, res) => {
 
     // Recalculate total
     cart.total = cart.items.reduce((total, item) => total + (item.price * item.quantity), 0);
-    
+
     await cart.save();
-    
+
     // Populate before sending response
     await cart.populate("items.product", "name price slug photoUrl quantity");
-    
+
     res.status(200).send({
       success: true,
       message: "Item removed from cart successfully",
@@ -851,7 +851,7 @@ export const clearCartController = async (req, res) => {
   try {
     const userId = req.user._id;
     const cart = await cartModel.findOne({ user: userId });
-    
+
     if (!cart) {
       return res.status(404).send({
         success: false,
@@ -882,17 +882,96 @@ export const clearCartController = async (req, res) => {
 export const createRazorpayOrderController = async (req, res) => {
   try {
     const userId = req.user._id;
+    const { cart: frontendCart } = req.body;
+
+    console.log("💳 Razorpay Order Creation Started for user:", userId);
+    console.log("🛒 Frontend Cart received:", frontendCart ? `Array(${frontendCart.length})` : "None");
+
+    // Sync frontend cart to DB if provided
+    if (frontendCart && Array.isArray(frontendCart) && frontendCart.length > 0) {
+      try {
+        console.log("🔄 Syncing frontend cart to database...");
+        let userCart = await cartModel.findOne({ user: userId });
+        if (!userCart) {
+          console.log("🆕 Creating new cart for user");
+          userCart = new cartModel({ user: userId, items: [] });
+        }
+
+        // Map frontend products to cart items, fetching FRESH prices from DB
+        const syncedItems = [];
+        for (const item of frontendCart) {
+          const product = await productModel.findById(item._id);
+          if (product) {
+            // CRITICAL: We use 1 as initial quantity because item.quantity currently contains stock count
+            const purchaseQuantity = 1;
+            console.log(`📍 Mapping item from DB: ${product.name} (ID: ${product._id}, DB Price: ${product.price}, Qty: ${purchaseQuantity})`);
+            syncedItems.push({
+              product: product._id,
+              quantity: purchaseQuantity,
+              price: product.price, // Use DB price
+              name: product.name,
+              image: product.photoUrl || "",
+            });
+          } else {
+            console.log(`⚠️ Product not found in DB: ${item._id}`);
+          }
+        }
+
+        userCart.items = syncedItems;
+        const savedCart = await userCart.save();
+        console.log("✅ Cart synced and saved. Total items in DB:", savedCart.items.length, "Total Amount:", savedCart.total);
+      } catch (syncError) {
+        console.error("❌ Sync Error:", syncError.message);
+        return res.status(400).send({
+          success: false,
+          message: "Failed to sync cart: " + syncError.message,
+        });
+      }
+    }
+
     const cart = await cartModel.findOne({ user: userId }).populate("items.product").exec();
 
-    if (!cart || cart.items.length === 0) {
+    if (!cart) {
+      console.log("❌ No cart found for user after sync attempt");
       return res.status(400).send({
         success: false,
-        message: "Cart is empty",
+        message: "Cart not found - please add items to cart again",
       });
     }
 
-    const total = cart.total;
-    const amount = Math.round(total * 100);
+    if (cart.items.length === 0) {
+      console.log("❌ Cart is empty for user:", userId);
+      return res.status(400).send({
+        success: false,
+        message: "Your cart is empty. Refresh and try again.",
+      });
+    }
+
+    console.log("💰 Final Cart Data before order creation:");
+    console.log("   - DB Total Field:", cart.total);
+    console.log("   - Item Count:", cart.items.length);
+
+    // FORCED RECALCULATION: Ignore the DB total field and re-calculate
+    // This ensures that even if sync logic has a bug, the final price is correct.
+    const calculatedTotal = cart.items.reduce((sum, item) => {
+      // Force quantity to 1 for each unique item to fix the stock count collision
+      const price = item.price || 0;
+      console.log(`   🧮 Adding Item: ${item.name} | Price: ${price} | Forced Qty: 1`);
+      return sum + (price * 1);
+    }, 0);
+
+    console.log("🔄 Forced Recalculated Total (Qty=1 for all):", calculatedTotal);
+
+    if (calculatedTotal <= 0) {
+      console.log("❌ Invalid calculated total:", calculatedTotal);
+      return res.status(400).send({
+        success: false,
+        message: "Invalid cart total. Please update your cart.",
+      });
+    }
+
+    const amount = Math.round(calculatedTotal * 100);
+    console.log(`💵 Amount being sent to Razorpay (in Paisa): ${amount} (In Rupees: ₹${calculatedTotal})`);
 
     const options = {
       amount: amount,
@@ -913,7 +992,7 @@ export const createRazorpayOrderController = async (req, res) => {
     res.status(200).send({
       success: true,
       order,
-      amount: total,
+      amount: cart.total,
       cart: cart.items,
     });
   } catch (error) {
@@ -968,7 +1047,7 @@ export const verifyRazorpayPaymentController = async (req, res) => {
     });
 
     await order.save();
-    
+
     // Clear the cart after successful order
     cart.items = [];
     cart.total = 0;

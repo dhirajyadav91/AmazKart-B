@@ -18,15 +18,23 @@ const userSchema = new mongoose.Schema(
     },
     phone: {
       type: String,
-      required: true,
+      required: false,
     },
     address: {
-      type: {},
-      required: true,
+      type: String,
+      required: false,
     },
     answer: {
       type: String,
-      required: true,
+      required: false,
+    },
+    otp: {
+      type: String,
+      required: false,
+    },
+    otpExpires: {
+      type: Date,
+      required: false,
     },
     role: {
       type: Number,

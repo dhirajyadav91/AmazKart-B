@@ -22,9 +22,11 @@ const testCloudinaryConnection = async () => {
     console.log('🚀 Cloudinary is ready to use!');
   } catch (error) {
     console.log('❌ Cloudinary connection failed!');
-    console.log('📋 Error details:', error.message);
+    console.log('📋 Error details:', error.message || error);
+    if (error.code) console.log('🔢 Error code:', error.code);
+    if (error.http_code) console.log('🌐 HTTP code:', error.http_code);
     console.log('🔧 Please check your Cloudinary credentials in .env file');
-    
+
     // Check which credentials are missing
     if (!process.env.CLOUDINARY_CLOUD_NAME) {
       console.log('❌ CLOUDINARY_CLOUD_NAME is missing in .env');
